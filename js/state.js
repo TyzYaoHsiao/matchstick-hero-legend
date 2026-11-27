@@ -233,6 +233,7 @@
 
   /* ---------- 存讀檔 ---------- */
   G.save = function () {
+    if (G.noSave) return; // 匯入存檔後準備重新整理，不要讓舊進度蓋回去
     G.S.savedAt = Date.now();
     ['runBest', 'souls', 'soulsTotal', 'rebirths', 'talents'].forEach(k => { delete G.S[k]; }); // 清掉已移除的轉生系統留下的欄位
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(G.S)); } catch (e) { /* 無法存檔時照樣能玩 */ }
@@ -254,6 +255,33 @@
       merged.army = (Array.isArray(s.army) ? s.army : []).map(a => ({ t: a.t, b: a.b }));
       return merged;
     } catch (e) { return null; }
+  };
+  /* ---------- 存檔碼：換網址、換電腦時搬進度用（save-export.html 用一樣的格式） ---------- */
+  const CODE_HEAD = 'SHL2:';
+  G.exportCode = function () {
+    G.save();
+    const raw = localStorage.getItem(SAVE_KEY) || JSON.stringify(G.S);
+    return CODE_HEAD + btoa(unescape(encodeURIComponent(raw)));
+  };
+  // 解開存檔碼：成功回傳存檔物件；格式不對回傳錯誤訊息（字串）
+  G.readCode = function (code) {
+    code = String(code || '').replace(/\s+/g, '');
+    if (code.startsWith(CODE_HEAD)) code = code.slice(CODE_HEAD.length);
+    let s;
+    try { s = JSON.parse(decodeURIComponent(escape(atob(code)))); } catch (e) { return '存檔碼格式不對，請確認有完整複製'; }
+    if (!s || typeof s !== 'object' || typeof s.stage !== 'number' || typeof s.best !== 'number') return '這不是火柴勇者傳說Ⅱ的存檔碼';
+    return s;
+  };
+  G.savedBest = function () {
+    try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return s && typeof s.best === 'number' ? s.best : 0; } catch (e) { return 0; }
+  };
+  // 成功回傳 true；格式不對回傳錯誤訊息
+  G.importCode = function (code) {
+    const s = G.readCode(code);
+    if (typeof s === 'string') return s;
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) { return '瀏覽器不允許存檔，無法匯入'; }
+    G.noSave = true;
+    return true;
   };
   G.wipe = function () {
     try { localStorage.removeItem(SAVE_KEY); } catch (e) {}

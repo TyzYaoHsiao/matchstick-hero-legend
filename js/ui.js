@@ -532,6 +532,34 @@
     $('codex').onclick = e => { if (e.target === $('codex')) codexClose(); }; // 點外面關閉
     addEventListener('keydown', e => { if (e.key === 'Escape' && !$('codex').hidden) codexClose(); });
 
+    /* ---------- 匯出 / 匯入存檔 ---------- */
+    function copyText(t) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(() => true, () => copyOld(t));
+      return Promise.resolve(copyOld(t));
+    }
+    function copyOld(t) {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+      ta.remove(); return ok;
+    }
+    $('exportBtn').onclick = () => {
+      const code = G.exportCode();
+      copyText(code).then(ok => {
+        if (ok) ui.toast('存檔碼已複製，到新的網址按「匯入存檔」貼上');
+        else prompt('複製下面這串存檔碼：', code);
+      });
+    };
+    $('importBtn').onclick = () => {
+      const code = prompt('貼上存檔碼（會覆蓋目前的進度）：');
+      if (!code) return;
+      const r = G.importCode(code);
+      if (r !== true) { ui.toast(r); return; }
+      ui.toast('匯入成功，重新載入中…');
+      setTimeout(() => location.reload(), 600);
+    };
+
     let armed = false;
     $('resetBtn').onclick = () => {
       const b = $('resetBtn');

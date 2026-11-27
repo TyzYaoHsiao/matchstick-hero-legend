@@ -28,6 +28,16 @@
 
   // 啟動
   G.makeSprites();
+  // 一鍵轉移：save-export.html 會用 index.html#import=<存檔碼> 打開這裡（# 後面不會傳到伺服器）
+  let importMsg = null;
+  if (location.hash.startsWith('#import=')) {
+    const code = decodeURIComponent(location.hash.slice(8));
+    history.replaceState(null, '', location.pathname + location.search); // 清掉網址上的存檔碼，重新整理才不會再匯一次
+    const s = G.readCode(code), cur = G.savedBest();
+    if (typeof s === 'string') importMsg = '轉移失敗：' + s;
+    else if (cur && !confirm(`要用轉移過來的進度（最高第 ${s.best} 關）取代這裡目前的進度（最高第 ${cur} 關）嗎？`)) importMsg = '已取消轉移，保留目前進度';
+    else { const r = G.importCode(code); G.noSave = false; importMsg = r === true ? `轉移成功！最高第 ${s.best} 關` : '轉移失敗：' + r; }
+  }
   G.S = G.load() || G.newState();
   G.S.army = G.S.army || [];
   const away = (Date.now() - (G.S.savedAt || Date.now())) / 1000;
@@ -35,6 +45,7 @@
   fit();
   B.reset();
   G.ui.init();
+  if (importMsg) setTimeout(() => G.ui.toast(importMsg), 300);
   B.auraShown = -1; B.checkAura();
   B.checkAllPartnerAuras(true);
   if (window.ResizeObserver) new ResizeObserver(fit).observe(stage);

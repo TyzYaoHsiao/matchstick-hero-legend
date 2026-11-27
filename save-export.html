@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>火柴勇者傳說Ⅱ・存檔匯出補丁</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #14121c; color: #eee; font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; }
+  .box { width: min(560px, 92vw); background: #1f1c2b; border: 1px solid #3a3550; border-radius: 12px; padding: 24px; }
+  h1 { margin: 0 0 6px; font-size: 22px; }
+  p, li { color: #b9b4cc; line-height: 1.7; font-size: 14px; }
+  textarea { width: 100%; box-sizing: border-box; height: 120px; background: #0e0c14; color: #ffd37a; border: 1px solid #3a3550; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; word-break: break-all; resize: vertical; }
+  button { margin-top: 10px; width: 100%; padding: 12px; font-size: 16px; font-weight: 700; border: 0; border-radius: 8px; background: #e8a33d; color: #1a1300; cursor: pointer; }
+  .info { margin: 12px 0; padding: 10px 12px; border-radius: 8px; background: #2a2639; font-size: 14px; }
+  button.sub { background: #3a3550; color: #eee; font-size: 14px; }
+  button:disabled { opacity: .4; cursor: default; }
+  details { margin-top: 8px; color: #b9b4cc; font-size: 14px; }
+  summary { cursor: pointer; margin-bottom: 8px; }
+  .err { color: #ff8a8a; }
+  .ok { color: #8cf0a8; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>存檔匯出補丁</h1>
+  <p>這個檔案用來把<b>舊版（在電腦上直接開 index.html 玩的）</b>進度搬到線上版。</p>
+  <div class="info" id="info"></div>
+  <button id="go">一鍵轉移到線上版</button>
+  <p>使用方式：把這個檔案放進舊版遊戲的資料夾（跟 <code>index.html</code> 同一層），用<b>當初玩遊戲的同一個瀏覽器</b>（Chrome / Edge）打開，按上面的按鈕就會自動打開線上版並帶入進度。</p>
+  <details>
+    <summary>手動轉移（一鍵轉移不成功時）</summary>
+    <textarea id="code" readonly></textarea>
+    <button id="copy" class="sub">複製存檔碼</button>
+    <p>複製後打開線上版，在左下角按「匯入存檔」貼上。</p>
+  </details>
+</div>
+<script>
+  // 格式和遊戲裡的 G.exportCode 一樣：'SHL2:' + base64(UTF-8 JSON)
+  const KEY = 'stick-hero-legend2-v1';
+  const ONLINE = 'https://tyzyaohsiao.github.io/matchstick-hero-legend/'; // 線上版網址
+  const info = document.getElementById('info'), box = document.getElementById('code'), btn = document.getElementById('copy'), go = document.getElementById('go');
+  let raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) {}
+  let s = null;
+  try { s = raw && JSON.parse(raw); } catch (e) {}
+  if (!s) {
+    info.innerHTML = '<span class="err">找不到存檔。</span>請確認這個檔案和舊版 index.html 放在同一個資料夾，並用當初玩遊戲的瀏覽器打開。';
+    btn.disabled = true; go.disabled = true;
+  } else {
+    const t = s.savedAt ? new Date(s.savedAt).toLocaleString() : '未知';
+    info.innerHTML = `<span class="ok">找到存檔！</span>最高關卡 <b>${s.best}</b>・目前第 ${s.stage} 關・最後存檔 ${t}`;
+    box.value = 'SHL2:' + btoa(unescape(encodeURIComponent(raw)));
+  }
+  // 存檔碼放在 # 後面：只在瀏覽器裡傳給線上版，不會送到伺服器
+  go.onclick = () => { location.href = ONLINE + '#import=' + encodeURIComponent(box.value); };
+  btn.onclick = () => {
+    box.select();
+    const done = () => { btn.textContent = '已複製！去線上版按「匯入存檔」貼上'; };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(box.value).then(done, () => { document.execCommand('copy'); done(); });
+    else { document.execCommand('copy'); done(); }
+  };
+</script>
+</body>
+</html>

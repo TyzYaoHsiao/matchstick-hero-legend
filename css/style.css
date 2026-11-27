@@ -117,6 +117,7 @@ h1 { margin: 0; font-family: var(--title); font-size: 1.6rem; font-weight: 900; 
 .buy span { font-size: .78rem; font-weight: 400; }
 .btn * { pointer-events: none; } /* 點到按鈕內文字也算點按鈕本身 */
 .ctrl { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: auto; }
+.ctrl2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 
 /* 右側分頁 */
 .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
