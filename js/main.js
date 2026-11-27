@@ -65,6 +65,8 @@
   }
 
   setInterval(G.save, 5000);
+  // 頁面已經開著、網址只改了 # 後面：瀏覽器不會重新載入，自己重新載入一次讓上面的匯入程式跑
+  addEventListener('hashchange', () => { if (location.hash.startsWith('#import=')) { G.noSave = true; location.reload(); } });
   // 別的分頁匯入了存檔：這個分頁停止存檔並重新載入，避免用舊進度蓋掉
   addEventListener('storage', e => {
     if (e.key !== G.SAVE_KEY || !e.newValue || G.noSave) return;
