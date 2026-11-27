@@ -272,6 +272,7 @@
     if (!s || typeof s !== 'object' || typeof s.stage !== 'number' || typeof s.best !== 'number') return '這不是火柴勇者傳說Ⅱ的存檔碼';
     return s;
   };
+  G.SAVE_KEY = SAVE_KEY;
   G.savedBest = function () {
     try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return s && typeof s.best === 'number' ? s.best : 0; } catch (e) { return 0; }
   };
@@ -279,6 +280,7 @@
   G.importCode = function (code) {
     const s = G.readCode(code);
     if (typeof s === 'string') return s;
+    s.importedAt = Date.now(); // 其他開著的分頁看到這個值變了，就知道要重新載入
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) { return '瀏覽器不允許存檔，無法匯入'; }
     G.noSave = true;
     return true;

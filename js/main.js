@@ -65,6 +65,12 @@
   }
 
   setInterval(G.save, 5000);
+  // 別的分頁匯入了存檔：這個分頁停止存檔並重新載入，避免用舊進度蓋掉
+  addEventListener('storage', e => {
+    if (e.key !== G.SAVE_KEY || !e.newValue || G.noSave) return;
+    let t; try { t = JSON.parse(e.newValue).importedAt; } catch (err) { return; }
+    if (t && t !== G.S.importedAt) { G.noSave = true; location.reload(); }
+  });
   addEventListener('beforeunload', G.save);
   document.addEventListener('visibilitychange', () => { if (document.hidden) G.save(); });
 
